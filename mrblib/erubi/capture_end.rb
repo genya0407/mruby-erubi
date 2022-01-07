@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'erubi'
-
 module Erubi
   # An engine class that supports capturing blocks via the <tt><%|=</tt> and <tt><%|==</tt> tags,
   # explicitly ending the captures using <tt><%|</tt> end <tt>%></tt> blocks.

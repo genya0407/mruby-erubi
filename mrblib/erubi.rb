@@ -1,46 +1,16 @@
 # frozen_string_literal: true
 
 module Erubi
-  VERSION = '1.10.0'
+  TEXT_END = "'.freeze;"
+  MATCH_METHOD = :match?
+  ESCAPE_TABLE = {'&' => '&amp;'.freeze, '<' => '&lt;'.freeze, '>' => '&gt;'.freeze, '"' => '&quot;'.freeze, "'" => '&#39;'.freeze}.freeze
+  RANGE_FIRST = 0
+  RANGE_LAST = -1
+  TEXT_END = "'.freeze;"
+  MATCH_METHOD = :match?
 
-  # :nocov:
-  if RUBY_VERSION >= '1.9'
-    RANGE_FIRST = 0
-    RANGE_LAST = -1
-  else
-    RANGE_FIRST = 0..0
-    RANGE_LAST = -1..-1
-  end
-
-  TEXT_END = RUBY_VERSION >= '2.1' ? "'.freeze;" : "';"
-  MATCH_METHOD = RUBY_VERSION >= '2.4' ? :match? : :match
-  # :nocov:
-
-  begin
-    require 'cgi/escape'
-    # :nocov:
-    unless CGI.respond_to?(:escapeHTML) # work around for JRuby 9.1
-      CGI = Object.new
-      CGI.extend(defined?(::CGI::Escape) ? ::CGI::Escape : ::CGI::Util)
-    end
-    # :nocov:
-    # Escape characters with their HTML/XML equivalents.
-    def self.h(value)
-      CGI.escapeHTML(value.to_s)
-    end
-  rescue LoadError
-    # :nocov:
-    ESCAPE_TABLE = {'&' => '&amp;'.freeze, '<' => '&lt;'.freeze, '>' => '&gt;'.freeze, '"' => '&quot;'.freeze, "'" => '&#39;'.freeze}.freeze
-    if RUBY_VERSION >= '1.9'
-      def self.h(value)
-        value.to_s.gsub(/[&<>"']/, ESCAPE_TABLE)
-      end
-    else
-      def self.h(value)
-        value.to_s.gsub(/[&<>"']/){|s| ESCAPE_TABLE[s]}
-      end
-    end
-    # :nocov:
+  def self.h(value)
+    value.to_s.gsub(/[&<>"']/){|s| ESCAPE_TABLE[s]}
   end
 
   class Engine
@@ -74,7 +44,7 @@ module Erubi
     # +:src+ :: The initial value to use for the source code, an empty string by default.
     # +:trim+ :: Whether to trim leading and trailing whitespace, true by default.
     def initialize(input, properties={})
-      @escape = escape = properties.fetch(:escape){properties.fetch(:escape_html, false)}
+      @escape = escape = properties[:escape] || properties[:escape_html] || false
       trim       = properties[:trim] != false
       @filename  = properties[:filename]
       @bufvar = bufvar = properties[:bufvar] || properties[:outvar] || "_buf"
